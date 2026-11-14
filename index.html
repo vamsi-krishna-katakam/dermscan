@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dermascan Cloud Portal | Live Skin Disease & GPS Map Monitor</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Portal Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">🔬</div>
+            <div>
+                <div class="brand-title">Dermascan Cloud Portal</div>
+                <div class="brand-subtitle">Live GPS Disease Map & Detection Records</div>
+            </div>
+        </div>
+        <div class="header-badges">
+            <div class="status-pill">
+                <span class="pulse-dot"></span>
+                <span id="cloudStatusText">Connecting Cloud Database...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Top Analytics Metric Cards -->
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon-box" style="background: var(--primary-light); color: var(--primary);">📊</div>
+                <div>
+                    <div class="metric-label">Total Cases Logged</div>
+                    <div class="metric-value" id="metricTotal">--</div>
+                    <div class="metric-sub">Total database records</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon-box" style="background: var(--danger-light); color: var(--danger);">⚠️</div>
+                <div>
+                    <div class="metric-label">High Risk Cases (Melanoma)</div>
+                    <div class="metric-value" id="metricMelanoma" style="color: var(--danger);">--</div>
+                    <div class="metric-sub">High priority detection</div>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon-box" style="background: var(--warning-light); color: var(--warning);">🩺</div>
+                <div>
+                    <div class="metric-label">Most Prevalent Condition</div>
+                    <div class="metric-value" id="metricTopDisease" style="font-size: 1.3rem;">--</div>
+                    <div class="metric-sub">Highest localized frequency</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Leaflet Map Section -->
+        <section class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>🗺️ Geographic Disease Outbreak Map</span>
+                </div>
+                <div class="filter-bar">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-right: 4px;">Filter Disease:</span>
+                    <button class="filter-btn active" data-category="All" onclick="filterByDisease('All')">All</button>
+                    <button class="filter-btn" data-category="Melanoma" onclick="filterByDisease('Melanoma')">
+                        <span class="filter-dot" style="background: #ef4444;"></span> Melanoma
+                    </button>
+                    <button class="filter-btn" data-category="Eczema" onclick="filterByDisease('Eczema')">
+                        <span class="filter-dot" style="background: #f97316;"></span> Eczema
+                    </button>
+                    <button class="filter-btn" data-category="Acne" onclick="filterByDisease('Acne')">
+                        <span class="filter-dot" style="background: #0ea5e9;"></span> Acne
+                    </button>
+                    <button class="filter-btn" data-category="Vitiligo" onclick="filterByDisease('Vitiligo')">
+                        <span class="filter-dot" style="background: #a855f7;"></span> Vitiligo
+                    </button>
+                    <button class="filter-btn" data-category="Warts" onclick="filterByDisease('Warts')">
+                        <span class="filter-dot" style="background: #22c55e;"></span> Warts
+                    </button>
+                    <button class="filter-btn" data-category="Onychomycosis" onclick="filterByDisease('Onychomycosis')">
+                        <span class="filter-dot" style="background: #eab308;"></span> Onychomycosis
+                    </button>
+                </div>
+            </div>
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+        </section>
+
+        <!-- Detected Cases Table Section -->
+        <section class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>📋 Detected Cases & GPS Records</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn" onclick="exportCasesCSV()">📥 Export to CSV</button>
+                    <button class="btn btn-primary" id="btnRefresh">🔄 Live Refresh</button>
+                </div>
+            </div>
+
+            <div class="table-controls">
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text" id="searchInput" placeholder="Search disease, case ID, date..." />
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                    Click <b>📍 Locate</b> on any case to zoom directly to its GPS coordinate pin on the map.
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Case ID</th>
+                            <th>Disease Category</th>
+                            <th>Diagnostic Match</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>Detection Timestamp</th>
+                            <th>Map Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                Loading cases from cloud database...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        Dermascan AI • Autonomous Skin Disease Detection & Geo-Tracking System
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
+
